@@ -3,10 +3,10 @@ import TelegramStorage from '../js/telegram.js';
 export async function onRequestPost({ request, env }) {
     try {
         const formData = await request.formData();
-        const imageFile = formData.get('image');
+        const file = formData.get('image');
         
-        if (!imageFile) {
-            throw new Error('No image file provided');
+        if (!file) {
+            throw new Error('No file provided');
         }
 
         // 获取存储类型
@@ -21,11 +21,11 @@ export async function onRequestPost({ request, env }) {
             );
 
             try {
-                console.log('Starting file upload to Telegram...');
-                const arrayBuffer = await imageFile.arrayBuffer();
+                console.log(`Starting file upload to Telegram: ${file.name}`);
+                const arrayBuffer = await file.arrayBuffer();
                 console.log('File converted to array buffer, size:', arrayBuffer.byteLength);
                 
-                const result = await telegram.sendFile(arrayBuffer, imageFile.name, request.url);
+                const result = await telegram.sendFile(arrayBuffer, file.name, request.url);
                 console.log('Telegram upload result:', JSON.stringify(result, null, 2));
                 
                 // 确保获取到了文件URL
@@ -48,14 +48,14 @@ export async function onRequestPost({ request, env }) {
 
             const timestamp = Date.now();
             const randomString = Math.random().toString(36).substring(2, 15);
-            const extension = imageFile.name.split('.').pop().toLowerCase();
+            const extension = file.name.split('.').pop().toLowerCase();
             const filename = `${timestamp}-${randomString}.${extension}`;
 
-            const arrayBuffer = await imageFile.arrayBuffer();
+            const arrayBuffer = await file.arrayBuffer();
             await env.IMAGES.put(filename, arrayBuffer, {
                 metadata: {
-                    contentType: imageFile.type,
-                    filename: imageFile.name,
+                    contentType: file.type,
+                    filename: file.name,
                     size: arrayBuffer.byteLength
                 }
             });
@@ -72,9 +72,9 @@ export async function onRequestPost({ request, env }) {
         return new Response(
             JSON.stringify({
                 url: url,
-                filename: imageFile.name,
-                size: imageFile.size,
-                type: imageFile.type
+                filename: file.name,
+                size: file.size,
+                type: file.type
             }), {
                 headers: {
                     'Content-Type': 'application/json',
