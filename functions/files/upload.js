@@ -26,9 +26,38 @@ export async function onRequest(context) {
                 context.env.TELEGRAM_CHAT_ID
             );
 
-            const arrayBuffer = await file.arrayBuffer();
-            const result = await telegram.sendFile(arrayBuffer, file.name);
-            url = result.url;
+            try {
+                console.log(`Starting file upload to Telegram: ${file.name}`);
+                const arrayBuffer = await file.arrayBuffer();
+                console.log('File converted to array buffer, size:', arrayBuffer.byteLength);
+                
+                const result = await telegram.sendFile(arrayBuffer, file.name, context.request.url);
+                console.log('Telegram upload result:', JSON.stringify(result, null, 2));
+                
+                // 确保获取到了文件URL
+                if (!result || !result.file_url) {
+                    console.error('Missing file_url in result:', result);
+                    throw new Error('未能获取到文件URL');
+                }
+
+                return new Response(JSON.stringify({ 
+                    url: result.file_url,
+                    filename: file.name,
+                    size: file.size,
+                    type: file.type,
+                    telegram_type: result.type,
+                    file_id: result.file_id
+                }), {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            } catch (error) {
+                console.error('Telegram upload error:', error);
+                console.error('Error details:', error.stack);
+                throw new Error(`文件上传失败: ${error.message}`);
+            }
         } else {
             // 使用KV存储
             const timestamp = Date.now();
