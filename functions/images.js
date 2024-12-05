@@ -21,16 +21,23 @@ export async function onRequestPost({ request, env }) {
             );
 
             try {
+                console.log('Starting file upload to Telegram...');
                 const arrayBuffer = await imageFile.arrayBuffer();
+                console.log('File converted to array buffer, size:', arrayBuffer.byteLength);
+                
                 const result = await telegram.sendFile(arrayBuffer, imageFile.name, request.url);
+                console.log('Telegram upload result:', JSON.stringify(result, null, 2));
                 
                 // 确保获取到了文件URL
                 if (!result || !result.file_url) {
+                    console.error('Missing file_url in result:', result);
                     throw new Error('未能获取到文件URL');
                 }
                 url = result.file_url;
+                console.log('Successfully got file URL:', url);
             } catch (error) {
                 console.error('Telegram upload error:', error);
+                console.error('Error details:', error.stack);
                 throw new Error(`文件上传失败: ${error.message}`);
             }
         } else {

@@ -54,10 +54,17 @@ export default class TelegramStorage {
                 throw new Error('Failed to send file to Telegram: ' + result.description);
             }
 
-            // 确保获取文件ID
-            const fileId = result.result.document?.file_id;
-            if (!fileId) {
-                throw new Error('Failed to get file ID from Telegram');
+            console.log('Telegram response:', JSON.stringify(result, null, 2));
+
+            // 从响应中获取文件ID
+            let fileId;
+            if (result.result.document) {
+                fileId = result.result.document.file_id;
+            } else if (result.result.file_id) {
+                fileId = result.result.file_id;
+            } else {
+                console.error('Unexpected Telegram response:', result);
+                throw new Error('Unexpected response format from Telegram');
             }
 
             // 获取文件的直接链接
