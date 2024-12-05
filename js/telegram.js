@@ -39,6 +39,8 @@ export default class TelegramStorage {
             fileParam = 'document';
         }
 
+        console.log(`Sending file as ${apiMethod} with param ${fileParam}`);
+
         // 添加文件到表单
         formData.append(fileParam, blob, filename);
 
@@ -49,11 +51,11 @@ export default class TelegramStorage {
         });
 
         const result = await response.json();
+        console.log('Raw Telegram response:', JSON.stringify(result, null, 2));
+
         if (!result.ok) {
             throw new Error(`Failed to send file to Telegram: ${result.description}`);
         }
-
-        console.log('Telegram response:', JSON.stringify(result, null, 2));
 
         // 从响应中获取文件ID
         let fileId;
@@ -64,6 +66,7 @@ export default class TelegramStorage {
         } else if (isVideo) {
             // 视频文件
             fileId = result.result.video?.file_id;
+            console.log('Video file_id:', fileId);
         } else {
             // 其他文件
             fileId = result.result.document?.file_id;
@@ -75,14 +78,20 @@ export default class TelegramStorage {
         }
 
         // 获取文件的直接链接
+        console.log('Getting file URL for file_id:', fileId);
         const fileInfo = await this.getFileUrl(fileId, requestUrl);
+        console.log('File info from Telegram:', fileInfo);
+
         if (!fileInfo || !fileInfo.url) {
             throw new Error('Failed to get file URL from Telegram');
         }
 
+        // 返回统一的响应格式
         return {
-            ...result.result,
-            file_url: fileInfo.url
+            message_id: result.result.message_id,
+            file_id: fileId,
+            file_url: fileInfo.url,
+            type: isImage ? 'photo' : (isVideo ? 'video' : 'document')
         };
     }
 

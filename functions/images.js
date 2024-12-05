@@ -33,8 +33,23 @@ export async function onRequestPost({ request, env }) {
                     console.error('Missing file_url in result:', result);
                     throw new Error('未能获取到文件URL');
                 }
-                url = result.file_url;
-                console.log('Successfully got file URL:', url);
+
+                // 返回统一的响应格式
+                return new Response(
+                    JSON.stringify({
+                        url: result.file_url,
+                        filename: file.name,
+                        size: file.size,
+                        type: file.type,
+                        telegram_type: result.type,  // 添加 Telegram 文件类型信息
+                        file_id: result.file_id      // 添加 Telegram 文件ID
+                    }), {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        }
+                    }
+                );
             } catch (error) {
                 console.error('Telegram upload error:', error);
                 console.error('Error details:', error.stack);
