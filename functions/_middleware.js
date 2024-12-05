@@ -38,11 +38,16 @@ export async function onRequest(context) {
     }
 
     // 处理存储类型
-    // 1. 优先使用请求头中的存储类型
-    // 2. 如果请求头中没有，使用环境变量中的存储类型
-    // 3. 如果环境变量中也没有，使用默认值 'KV'
     const headerStorageType = context.request.headers.get('X-Storage-Type');
-    context.env.STORAGE_TYPE = headerStorageType || context.env.STORAGE_TYPE || 'KV';
+    // 如果请求头中有存储类型，使用请求头中的值覆盖环境变量
+    if (headerStorageType) {
+      context.env.STORAGE_TYPE = headerStorageType;
+      console.log('Using storage type from header:', headerStorageType);
+    } else {
+      // 否则使用环境变量或默认值
+      context.env.STORAGE_TYPE = context.env.STORAGE_TYPE || 'KV';
+      console.log('Using storage type from env:', context.env.STORAGE_TYPE);
+    }
 
     // 初始化数据库
     await initializeDatabase(context.env);

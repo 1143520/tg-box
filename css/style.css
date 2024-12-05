@@ -138,21 +138,24 @@ button[type="submit"]:hover,
     --font-mono: "Fira Code", "Noto Sans Mono CJK SC", "Source Code Pro", Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 
     /* 浅色主题变量 */
-    --bg-color: #f5f5f5;
-    --text-color: #333;
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --border-color: #e0e0e0;
+    --hover-color: #f5f5f5;
+    --primary-color: #4a90e2;
+    --primary-color-dark: #357abd;
     --grid-color: rgba(0, 0, 0, 0.84);
     --card-bg: #ffffff;
     --card-inner-bg: #f8f8f8;
     --card-shadow: rgba(0, 0, 0, 0.08);
     --heading-color: #2c3e50;
-    --border-color: #e8e8e8;
     --input-bg: #ffffff;
     --input-border: #d0d0d0;
     --input-focus-border: #3498db;
     --input-text: #333;
     --input-placeholder: #999;
-    --file-bg: var(--card-inner-bg);
-    --file-border: var(--border-color);
+    --file-bg: #ffffff;
+    --file-border: #e0e0e0;
     --file-text: #2c3e50;
     --file-subtext: #7f8c8d;
     --code-bg: var(--card-inner-bg);
@@ -164,15 +167,18 @@ button[type="submit"]:hover,
 
 /* 深色主题变量 */
 [data-theme="dark"] {
-    --bg-color: #1a1a1a;
-    --text-color: #e0e0e0;
+    --background-color: #1a1a1a;
+    --text-color: #ffffff;
+    --border-color: #333333;
+    --hover-color: #2a2a2a;
+    --primary-color: #64b5f6;
+    --primary-color-dark: #42a5f5;
     --grid-color: rgba(255, 255, 255, 0.1);
     --card-bg: #2d2d2d;
-    --card-inner-bg: #1e1e1e;
+    --card-inner-bg: #363636;
     --card-border: #404040;
     --card-shadow: rgba(0, 0, 0, 0.3);
     --heading-color: #ffffff;
-    --border-color: #404040;
     --file-bg: #2d2d2d;
     --file-border: #404040;
     --file-text: #e0e0e0;
@@ -201,16 +207,16 @@ button[type="submit"]:hover,
 }
 
 body {
-    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background-color: var(--bg-color);
+    background-color: var(--background-color);
     background-image:
         linear-gradient(var(--grid-color) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size: 29px 29px;
-    background-position: 24px 24px;
-    background-attachment: fixed;
+    background-size: 20px 20px;
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -1784,3 +1790,44 @@ select {
     [data-theme="dark"] .confirm-dialog-message {
         color: #cccccc;
     }
+
+    /* 存储切换按钮样式 */
+    .storage-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border: 2px solid var(--border-color);
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .storage-toggle:hover {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .storage-toggle:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .storage-toggle {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .storage-toggle:hover {
+        background-color: var(--hover-color);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+}

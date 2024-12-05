@@ -15,8 +15,9 @@ export async function onRequest(context) {
             });
         }
 
-        // 获取存储类型
-        const storageType = context.env.STORAGE_TYPE || 'KV';
+        // 从请求头获取存储类型
+        const storageType = context.request.headers.get('X-Storage-Type') || context.env.STORAGE_TYPE || 'KV';
+        console.log('Using storage type:', storageType);
 
         let url;
         if (storageType === 'TELEGRAM') {
@@ -39,24 +40,10 @@ export async function onRequest(context) {
                     console.error('Missing file_url in result:', result);
                     throw new Error('未能获取到文件URL');
                 }
-
-                return new Response(JSON.stringify({ 
-                    url: result.file_url,
-                    filename: file.name,
-                    size: file.size,
-                    type: file.type,
-                    telegram_type: result.type,
-                    file_id: result.file_id
-                }), {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                });
+                url = result.file_url;
             } catch (error) {
                 console.error('Telegram upload error:', error);
-                console.error('Error details:', error.stack);
-                throw new Error(`文件上传失败: ${error.message}`);
+                throw error;
             }
         } else {
             // 使用KV存储
