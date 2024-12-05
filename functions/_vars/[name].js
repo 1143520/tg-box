@@ -4,9 +4,9 @@ export async function onRequestGet({ params, env }) {
     // 添加新的允许访问的环境变量
     const allowedVars = [
         'SYNC_INTERVAL',
-        'STORAGE_TYPE',  // 新增：存储类型 (KV 或 TELEGRAM)
-        'TELEGRAM_BOT_TOKEN',  // 新增：Telegram Bot Token
-        'TELEGRAM_CHAT_ID'  // 新增：Telegram Chat ID
+        'STORAGE_TYPE',  // 默认存储类型
+        'TELEGRAM_BOT_TOKEN',
+        'TELEGRAM_CHAT_ID'
     ];
     
     if (!allowedVars.includes(varName)) {
@@ -14,6 +14,21 @@ export async function onRequestGet({ params, env }) {
             status: 403,
             headers: {
                 'Access-Control-Allow-Origin': '*'
+            }
+        });
+    }
+    
+    // 特殊处理存储类型
+    if (varName === 'STORAGE_TYPE') {
+        // 从请求头获取前端设置的存储类型
+        const headerStorageType = request.headers.get('X-Storage-Type');
+        // 使用前端设置的类型，如果没有则使用环境变量，如果环境变量也没有则使用默认值 'KV'
+        const storageType = headerStorageType || env.STORAGE_TYPE || 'KV';
+        
+        return new Response(storageType, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-cache'
             }
         });
     }

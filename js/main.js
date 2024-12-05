@@ -33,7 +33,7 @@ async function getSyncInterval() {
 
 // 工具函数
 function getFileIcon(filename) {
-    // 取文件扩展名
+    // 取文件���展名
     const ext = filename.toLowerCase().split('.').pop();
     
     // Markdown文件
@@ -61,7 +61,7 @@ function getFileIcon(filename) {
     // 代码文件
     if (['js', 'ts', 'jsx', 'tsx', 'json', 'html', 'css', 'scss', 'less', 'sass', 'php', 'py', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'swift', 'kt', 'rs', 'dart', 'vue', 'sql', 'sh', 'bash', 'yml', 'yaml', 'xml'].includes(ext)) return 'code';
     
-    // 压缩文件
+    // ��缩文件
     if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz'].includes(ext)) return 'archive';
     
     // 视频文件
@@ -92,7 +92,7 @@ function getFileTypeDescription(filename) {
     if (['ini', 'conf', 'cfg'].includes(ext)) return '配置文件';
     
     // 应用程序文件
-    if (ext === 'exe') return 'Windows可执行程序';
+    if (ext === 'exe') return 'Windows可执行程��';
     if (ext === 'msi') return 'Windows安装程序';
     if (ext === 'apk') return 'Android应用程序';
     if (ext === 'app') return 'macOS应用程序';
@@ -245,7 +245,7 @@ function getFileIconUrl(filename) {
 // 下载文件函数
 async function downloadFile(url, filename) {
     try {
-        showToast('准备下载文件...');
+        showToast('��备下载文件...');
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -520,6 +520,102 @@ window.editContent = function(id) {
     
     handleTypeChange(content.type);
     document.getElementById('editModal').style.display = 'block';
+}
+
+// 添加存储类型切换功能
+async function initStorageToggle() {
+    // 创建切换按钮
+    const storageToggle = document.createElement('button');
+    storageToggle.className = 'storage-toggle';
+    storageToggle.setAttribute('aria-label', '切换存储类型');
+    
+    // 从 localStorage 获取存储类型，如果没有则从服务器获取默认值
+    let currentStorage = localStorage.getItem('storageType');
+    if (!currentStorage) {
+        try {
+            const response = await fetch('/vars/STORAGE_TYPE');
+            currentStorage = await response.text();
+            localStorage.setItem('storageType', currentStorage);
+        } catch (error) {
+            console.error('获取默认存储类型失败:', error);
+            currentStorage = 'KV';
+            localStorage.setItem('storageType', currentStorage);
+        }
+    }
+
+    // 更新按钮文本
+    updateStorageButtonText(storageToggle, currentStorage);
+
+    // 添加切换事件
+    storageToggle.addEventListener('click', () => {
+        const newStorage = currentStorage === 'KV' ? 'TELEGRAM' : 'KV';
+        localStorage.setItem('storageType', newStorage);
+        currentStorage = newStorage;
+        updateStorageButtonText(storageToggle, currentStorage);
+    });
+
+    // 添加到页面
+    document.body.appendChild(storageToggle);
+}
+
+// 更新存储切换按钮的文本
+function updateStorageButtonText(button, storageType) {
+    button.textContent = storageType === 'KV' ? '当前：KV存储' : '当前：TG存储';
+}
+
+// 获取当前存储类型
+function getCurrentStorage() {
+    return localStorage.getItem('storageType') || 'KV';
+}
+
+// 修改上传函数，使用当前选择的存储类型
+async function uploadFile(file, type = 'file') {
+    const formData = new FormData();
+    const fieldName = type === 'image' ? 'image' : 'file';
+    formData.append(fieldName, file);
+
+    // 获取当前存储类型
+    const storageType = getCurrentStorage();
+    console.log(`使用存储类型: ${storageType}`);
+
+    const endpoint = type === 'image' ? '/images' : '/files/upload';
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'X-Storage-Type': storageType  // 添加存储类型头
+            },
+            body: formData
+        });
+
+        console.log('上传响应状态:', response.status);
+        const data = await response.json();
+        console.log('上传响应内容:', data);
+
+        if (!response.ok) {
+            throw new Error(data.error || '上传失败');
+        }
+
+        if (!data.url) {
+            throw new Error('上传成功但未返回文件URL');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('上传错误:', error);
+        throw error;
+    }
+}
+
+// 确保在DOM加载完成后初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initStorageToggle();
+        // 其他初始化代码...
+    });
+} else {
+    initStorageToggle();
+    // 其他初始化代码...
 }
 
 // DOM元素

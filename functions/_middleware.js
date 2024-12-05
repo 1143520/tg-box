@@ -37,6 +37,13 @@ export async function onRequest(context) {
       throw new Error('Database binding not found - 请在 Cloudflare Pages 设置中绑定 D1 数据库');
     }
 
+    // 处理存储类型
+    // 1. 优先使用请求头中的存储类型
+    // 2. 如果请求头中没有，使用环境变量中的存储类型
+    // 3. 如果环境变量中也没有，使用默认值 'KV'
+    const headerStorageType = context.request.headers.get('X-Storage-Type');
+    context.env.STORAGE_TYPE = headerStorageType || context.env.STORAGE_TYPE || 'KV';
+
     // 初始化数据库
     await initializeDatabase(context.env);
     
@@ -47,7 +54,7 @@ export async function onRequest(context) {
     const headers = new Headers(response.headers);
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Content-Type');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Storage-Type');
     
     return new Response(response.body, {
       status: response.status,
@@ -62,7 +69,7 @@ export async function onRequest(context) {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Storage-Type',
           'Access-Control-Max-Age': '86400',
         },
       });
@@ -81,7 +88,7 @@ export async function onRequest(context) {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Storage-Type',
         },
       }
     );
