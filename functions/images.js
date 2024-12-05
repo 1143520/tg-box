@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env }) {
             );
 
             const arrayBuffer = await imageFile.arrayBuffer();
-            const result = await telegram.sendFile(arrayBuffer, imageFile.name);
+            const result = await telegram.sendFile(arrayBuffer, imageFile.name, request.url);
             
             // 确保获取到了文件URL
             if (!result.file_url) {

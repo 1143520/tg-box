@@ -12,7 +12,7 @@ export default class TelegramStorage {
         return imageExtensions.includes(ext);
     }
 
-    async sendFile(arrayBuffer, filename) {
+    async sendFile(arrayBuffer, filename, requestUrl = '') {
         const formData = new FormData();
         const blob = new Blob([arrayBuffer]);
         formData.append('chat_id', this.chatId);
@@ -36,7 +36,7 @@ export default class TelegramStorage {
             const largestPhoto = photo[photo.length - 1];
             
             // 获取图片的直接链接
-            const fileInfo = await this.getFileUrl(largestPhoto.file_id);
+            const fileInfo = await this.getFileUrl(largestPhoto.file_id, requestUrl);
             return {
                 ...result.result,
                 file_url: fileInfo.url
@@ -56,7 +56,7 @@ export default class TelegramStorage {
 
             const fileId = result.result.document?.file_id;
             if (fileId) {
-                const fileInfo = await this.getFileUrl(fileId);
+                const fileInfo = await this.getFileUrl(fileId, requestUrl);
                 return {
                     ...result.result,
                     file_url: fileInfo.url
@@ -93,7 +93,7 @@ export default class TelegramStorage {
         };
     }
 
-    async getFileUrl(fileId) {
+    async getFileUrl(fileId, requestUrl = '') {
         // 获取文件信息
         const response = await fetch(`${this.apiBase}/getFile`, {
             method: 'POST',
@@ -110,8 +110,14 @@ export default class TelegramStorage {
             throw new Error('Failed to get file info from Telegram: ' + result.description);
         }
 
-        // 使用代理 URL
-        const baseUrl = window.location.origin;
+        // 从请求URL或环境中获取 origin
+        let baseUrl;
+        try {
+            baseUrl = requestUrl ? new URL(requestUrl).origin : '';
+        } catch (error) {
+            baseUrl = '';  // 如果无法解析，使用空字符串
+        }
+
         return {
             ...result.result,
             url: `${baseUrl}/images/proxy?path=${result.result.file_path}`
