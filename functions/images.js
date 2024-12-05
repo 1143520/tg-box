@@ -20,14 +20,19 @@ export async function onRequestPost({ request, env }) {
                 env.TELEGRAM_CHAT_ID
             );
 
-            const arrayBuffer = await imageFile.arrayBuffer();
-            const result = await telegram.sendFile(arrayBuffer, imageFile.name, request.url);
-            
-            // 确保获取到了文件URL
-            if (!result.file_url) {
-                throw new Error('未能获取到文件URL');
+            try {
+                const arrayBuffer = await imageFile.arrayBuffer();
+                const result = await telegram.sendFile(arrayBuffer, imageFile.name, request.url);
+                
+                // 确保获取到了文件URL
+                if (!result || !result.file_url) {
+                    throw new Error('未能获取到文件URL');
+                }
+                url = result.file_url;
+            } catch (error) {
+                console.error('Telegram upload error:', error);
+                throw new Error(`文件上传失败: ${error.message}`);
             }
-            url = result.file_url;
         } else {
             // 使用KV存储
             if (!env.IMAGES) {
