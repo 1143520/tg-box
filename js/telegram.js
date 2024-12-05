@@ -1,95 +1,83 @@
-class TelegramStorage {
+export default class TelegramStorage {
     constructor(botToken, chatId) {
         this.botToken = botToken;
         this.chatId = chatId;
-        this.apiBase = `https://api.telegram.org/bot${botToken}`;
+        this.apiBase = 'https://api.telegram.org/bot' + botToken;
+        this.fileApiBase = 'https://api.telegram.org/file/bot' + botToken;
+    }
+
+    async sendFile(arrayBuffer, filename) {
+        const formData = new FormData();
+        const blob = new Blob([arrayBuffer]);
+        formData.append('chat_id', this.chatId);
+        formData.append('document', blob, filename);
+
+        const response = await fetch(`${this.apiBase}/sendDocument`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (!result.ok) {
+            throw new Error('Failed to send file to Telegram: ' + result.description);
+        }
+
+        // 获取文件ID
+        const fileId = result.result.document?.file_id;
+        if (fileId) {
+            // 获取文件的直接下载链接
+            const fileInfo = await this.getFileUrl(fileId);
+            return {
+                ...result.result,
+                file_url: fileInfo.url
+            };
+        }
+
+        return result.result;
     }
 
     async sendMessage(text) {
-        try {
-            const response = await fetch(`${this.apiBase}/sendMessage`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: this.chatId,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
-            });
+        const response = await fetch(`${this.apiBase}/sendMessage`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: this.chatId,
+                text: text,
+                parse_mode: 'HTML'
+            })
+        });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Telegram API error: ${errorData.description || response.status}`);
-            }
-
-            const data = await response.json();
-            return {
-                messageId: data.result.message_id,
-                url: `https://t.me/${this.chatId}/${data.result.message_id}`
-            };
-        } catch (error) {
-            console.error('Error sending message to Telegram:', error);
-            throw error;
+        const result = await response.json();
+        if (!result.ok) {
+            throw new Error('Failed to send message to Telegram: ' + result.description);
         }
+
+        return result.result;
     }
 
-    async sendFile(file, filename) {
-        try {
-            const formData = new FormData();
-            formData.append('chat_id', this.chatId);
-            
-            // 根据文件类型决定使用哪个API方法
-            const fileType = this.getFileType(filename);
-            let method = 'sendDocument';
-            let fileKey = 'document';
-            
-            if (fileType === 'image') {
-                method = 'sendPhoto';
-                fileKey = 'photo';
-            } else if (fileType === 'video') {
-                method = 'sendVideo';
-                fileKey = 'video';
-            }
+    async getFileUrl(fileId) {
+        // 获取文件信息
+        const response = await fetch(`${this.apiBase}/getFile`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file_id: fileId
+            })
+        });
 
-            formData.append('caption', filename);
-            formData.append(fileKey, new Blob([file]), filename);
-
-            const response = await fetch(`${this.apiBase}/${method}`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Telegram API error: ${errorData.description || response.status}`);
-            }
-
-            const data = await response.json();
-            
-            // 获取消息ID
-            const messageId = data.result.message_id;
-            
-            return {
-                messageId: messageId,
-                url: `https://t.me/${this.chatId}/${messageId}`
-            };
-        } catch (error) {
-            console.error('Error sending file to Telegram:', error);
-            throw error;
+        const result = await response.json();
+        if (!result.ok) {
+            throw new Error('Failed to get file info from Telegram: ' + result.description);
         }
-    }
 
-    getFileType(filename) {
-        const ext = filename.toLowerCase().split('.').pop();
-        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        const videoExts = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
-        
-        if (imageExts.includes(ext)) return 'image';
-        if (videoExts.includes(ext)) return 'video';
-        return 'document';
+        // 返回文件的直接下载链接
+        return {
+            ...result.result,
+            url: `${this.fileApiBase}/${result.result.file_path}`
+        };
     }
-}
-
-export default TelegramStorage; 
+} 

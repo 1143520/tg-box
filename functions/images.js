@@ -22,7 +22,12 @@ export async function onRequestPost({ request, env }) {
 
             const arrayBuffer = await imageFile.arrayBuffer();
             const result = await telegram.sendFile(arrayBuffer, imageFile.name);
-            url = result.url;
+            url = result.file_url || result.photo?.[result.photo.length - 1]?.file_url || result.url;
+            
+            if (!url && result.file_id) {
+                const fileInfo = await telegram.getFileUrl(result.file_id);
+                url = fileInfo.url;
+            }
         } else {
             // 使用KV存储
             if (!env.IMAGES) {
