@@ -20,13 +20,14 @@ class TelegramStorage {
             });
 
             if (!response.ok) {
-                throw new Error(`Telegram API error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(`Telegram API error: ${errorData.description || response.status}`);
             }
 
             const data = await response.json();
             return {
                 messageId: data.result.message_id,
-                url: `https://t.me/c/${this.chatId.toString().replace('-100', '')}/${data.result.message_id}`
+                url: `https://t.me/${this.chatId}/${data.result.message_id}`
             };
         } catch (error) {
             console.error('Error sending message to Telegram:', error);
@@ -52,6 +53,7 @@ class TelegramStorage {
                 fileKey = 'video';
             }
 
+            formData.append('caption', filename);
             formData.append(fileKey, new Blob([file]), filename);
 
             const response = await fetch(`${this.apiBase}/${method}`, {
@@ -60,46 +62,21 @@ class TelegramStorage {
             });
 
             if (!response.ok) {
-                throw new Error(`Telegram API error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(`Telegram API error: ${errorData.description || response.status}`);
             }
 
             const data = await response.json();
             
-            // 获取文件ID
-            let fileId;
-            if (method === 'sendPhoto') {
-                fileId = data.result.photo[data.result.photo.length - 1].file_id;
-            } else if (method === 'sendVideo') {
-                fileId = data.result.video.file_id;
-            } else {
-                fileId = data.result.document.file_id;
-            }
-
-            // 获取文件路径
-            const fileInfo = await this.getFilePath(fileId);
-            const fileUrl = `https://api.telegram.org/file/bot${this.botToken}/${fileInfo.file_path}`;
-
+            // 获取消息ID
+            const messageId = data.result.message_id;
+            
             return {
-                messageId: data.result.message_id,
-                fileId: fileId,
-                url: fileUrl
+                messageId: messageId,
+                url: `https://t.me/${this.chatId}/${messageId}`
             };
         } catch (error) {
             console.error('Error sending file to Telegram:', error);
-            throw error;
-        }
-    }
-
-    async getFilePath(fileId) {
-        try {
-            const response = await fetch(`${this.apiBase}/getFile?file_id=${fileId}`);
-            if (!response.ok) {
-                throw new Error(`Telegram API error: ${response.status}`);
-            }
-            const data = await response.json();
-            return data.result;
-        } catch (error) {
-            console.error('Error getting file path:', error);
             throw error;
         }
     }
