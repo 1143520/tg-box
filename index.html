@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drop中转站</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Drop中转站</h1>
+            <button id="addNewBtn" class="btn">添加新内容</button>
+        </header>
+
+        <main id="content-container">
+            <!-- 初始骨架屏 -->
+            <section class="text-block skeleton">
+                <div class="text-block-header">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-meta"></div>
+                </div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+            </section>
+            <section class="text-block skeleton">
+                <div class="text-block-header">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-meta"></div>
+                </div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+            </section>
+            <section class="text-block skeleton">
+                <div class="text-block-header">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-meta"></div>
+                </div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 编辑模态框 -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <h2>编辑内容</h2>
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label for="editType">类型：</label>
+                        <select id="editType" onchange="handleTypeChange(this.value)">
+                            <option value="text">普通文本</option>
+                            <option value="code">代码</option>
+                            <option value="poetry">诗歌</option>
+                            <option value="image">图片</option>
+                            <option value="file">文件</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="titleGroup">
+                        <label for="editTitle">标题：</label>
+                        <input type="text" id="editTitle" required>
+                    </div>
+                    <div class="form-group" id="contentGroup">
+                        <label for="editContent">内容：</label>
+                        <textarea id="editContent" required></textarea>
+                    </div>
+                    <div class="form-group" id="imageGroup" style="display: none;">
+                        <label for="editImage">图片：</label>
+                        <input type="file" id="editImage" accept="image/*" onchange="handleImagePreview(event)">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    <div class="form-group" id="fileGroup" style="display: none;">
+                        <label for="editFile">文件：</label>
+                        <input type="file" id="editFile" onchange="handleFileSelect(event)">
+                        <div class="file-info">支持所有类型的文件</div>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn">保存</button>
+                        <button type="button" class="btn btn-cancel" onclick="closeModal()">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

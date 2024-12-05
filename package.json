@@ -1,0 +1,12 @@
+{
+  "name": "dropbox",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev --compatibility-date=2023-01-01",
+    "deploy": "wrangler pages deploy --compatibility-date=2023-01-01 ."
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+} 

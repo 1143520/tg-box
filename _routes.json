@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [],
+  "functions": {
+    "/contents": {
+      "function": "contents",
+      "method": ["GET", "POST", "OPTIONS"]
+    },
+    "/contents/*": {
+      "function": "contents/[id]",
+      "method": ["GET", "PUT", "DELETE", "OPTIONS"]
+    },
+    "/images": {
+      "function": "images",
+      "method": ["POST", "OPTIONS"]
+    },
+    "/images/*": {
+      "function": "images",
+      "method": ["GET", "OPTIONS"]
+    },
+    "/_vars/*": {
+      "function": "_vars/[name]",
+      "method": ["GET", "OPTIONS"]
+    },
+    "/files/upload": {
+      "function": "files/upload",
+      "method": ["POST", "OPTIONS"]
+    },
+    "/files/*": {
+      "function": "files",
+      "method": ["GET", "OPTIONS"]
+    }
+  }
+} 
