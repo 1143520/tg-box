@@ -35,20 +35,20 @@ async function getSyncInterval() {
 function getFileIcon(filename) {
     // 取文件���展名
     const ext = filename.toLowerCase().split('.').pop();
-    
+
     // Markdown文件
     if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) return 'markdown';
-    
+
     // 图片文件
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'heic'].includes(ext)) return 'image';
-    
+
     // 文档文件
     if (ext === 'pdf') return 'pdf';
     if (['doc', 'docx', 'rtf', 'odt', 'pages'].includes(ext)) return 'word';
     if (['xls', 'xlsx', 'csv', 'ods', 'numbers'].includes(ext)) return 'excel';
     if (['ppt', 'pptx', 'odp', 'key'].includes(ext)) return 'powerpoint';
     if (['txt', 'log', 'ini', 'conf', 'cfg'].includes(ext)) return 'text';
-    
+
     // 应用程序文件
     if (ext === 'exe') return 'windows';
     if (ext === 'msi') return 'windows-installer';
@@ -57,32 +57,32 @@ function getFileIcon(filename) {
     if (ext === 'deb' || ext === 'rpm') return 'linux';
     if (['appx', 'msix'].includes(ext)) return 'windows-store';
     if (['ipa', 'pkg'].includes(ext)) return 'ios';
-    
+
     // 代码文件
     if (['js', 'ts', 'jsx', 'tsx', 'json', 'html', 'css', 'scss', 'less', 'sass', 'php', 'py', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'swift', 'kt', 'rs', 'dart', 'vue', 'sql', 'sh', 'bash', 'yml', 'yaml', 'xml'].includes(ext)) return 'code';
-    
+
     // ��缩文件
     if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz'].includes(ext)) return 'archive';
-    
+
     // 视频文件
     if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'mpg', 'mpeg', 'ogv'].includes(ext)) return 'video';
-    
+
     // 音频文件
     if (['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'wma', 'opus', 'mid', 'midi'].includes(ext)) return 'audio';
-    
+
     return 'generic';
 }
 
 function getFileTypeDescription(filename) {
     // 获取文件扩展名
     const ext = filename.toLowerCase().split('.').pop();
-    
+
     // Markdown文件
     if (['md', 'markdown', 'mdown', 'mkd'].includes(ext)) return 'Markdown文档';
-    
+
     // 图片文件
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'heic'].includes(ext)) return '图片文件';
-    
+
     // 文档文件
     if (ext === 'pdf') return 'PDF文档';
     if (['doc', 'docx', 'rtf', 'odt', 'pages'].includes(ext)) return 'Word文档';
@@ -90,7 +90,7 @@ function getFileTypeDescription(filename) {
     if (['ppt', 'pptx', 'odp', 'key'].includes(ext)) return 'PowerPoint演示文稿';
     if (['txt', 'log'].includes(ext)) return '文本文件';
     if (['ini', 'conf', 'cfg'].includes(ext)) return '配置文件';
-    
+
     // 应用程序文件
     if (ext === 'exe') return 'Windows可执行程��';
     if (ext === 'msi') return 'Windows安装程序';
@@ -102,7 +102,7 @@ function getFileTypeDescription(filename) {
     if (['appx', 'msix'].includes(ext)) return 'Windows商店应用';
     if (ext === 'ipa') return 'iOS应用程序';
     if (ext === 'pkg') return 'macOS安装包';
-    
+
     // 代码文件
     if (['js', 'ts'].includes(ext)) return 'JavaScript/TypeScript文件';
     if (['jsx', 'tsx'].includes(ext)) return 'React组件';
@@ -124,18 +124,18 @@ function getFileTypeDescription(filename) {
     if (['sh', 'bash'].includes(ext)) return 'Shell脚本';
     if (['yml', 'yaml'].includes(ext)) return 'YAML配置';
     if (ext === 'xml') return 'XML文件';
-    
+
     // 压缩文件
     if (['zip', 'rar', '7z'].includes(ext)) return '压缩文件';
     if (['tar', 'gz', 'bz2', 'xz', 'tgz'].includes(ext)) return '归档文件';
-    
+
     // 视频文件
     if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'mpg', 'mpeg', 'ogv'].includes(ext)) return '视频文件';
-    
+
     // 音频文件
     if (['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'wma', 'opus'].includes(ext)) return '音频文件';
     if (['mid', 'midi'].includes(ext)) return 'MIDI音乐';
-    
+
     return `${ext.toUpperCase()}文件`;
 }
 
@@ -170,7 +170,7 @@ function showToast(message, type = 'success') {
     requestAnimationFrame(() => {
         toast.classList.add('show');
     });
-    
+
     setTimeout(() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
@@ -181,13 +181,13 @@ function showToast(message, type = 'success') {
 function copyText(encodedText, type) {
     const text = decodeContent(encodedText);
     let copyContent = text;
-    
+
     if (type === 'poetry') {
         copyContent = text.split('\n').join('\r\n');
     } else if (type === 'image') {
         copyContent = text;
     }
-    
+
     navigator.clipboard.writeText(copyContent).then(() => {
         showToast('复制成功！');
     }).catch(() => {
@@ -210,7 +210,7 @@ function showConfirmDialog(title, message) {
     return new Promise((resolve) => {
         const dialog = document.createElement('div');
         dialog.className = 'confirm-dialog';
-        
+
         dialog.innerHTML = `
             <div class="confirm-dialog-content">
                 <div class="confirm-dialog-title">${title}</div>
@@ -221,9 +221,9 @@ function showConfirmDialog(title, message) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(dialog);
-        
+
         const buttons = dialog.querySelectorAll('.btn');
         buttons.forEach(button => {
             button.addEventListener('click', () => {
@@ -252,7 +252,7 @@ async function downloadFile(url, filename) {
                 'Accept': '*/*'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`下载失败: ${response.status} ${response.statusText}`);
         }
@@ -268,16 +268,16 @@ async function downloadFile(url, filename) {
         let receivedLength = 0;
         const chunks = [];
 
-        while(true) {
-            const {done, value} = await reader.read();
-            
+        while (true) {
+            const { done, value } = await reader.read();
+
             if (done) {
                 break;
             }
-            
+
             chunks.push(value);
             receivedLength += value.length;
-            
+
             // 更新下载进度
             if (contentLength) {
                 const progress = ((receivedLength / contentLength) * 100).toFixed(2);
@@ -288,7 +288,7 @@ async function downloadFile(url, filename) {
         // 合并所有chunks
         const blob = new Blob(chunks);
         const blobUrl = window.URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = actualFilename;
@@ -296,7 +296,7 @@ async function downloadFile(url, filename) {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
-        
+
         showToast('文件下载完成');
     } catch (error) {
         console.error('下载失败:', error);
@@ -320,7 +320,7 @@ function renderContents(contents) {
     if (!contentContainer) {
         contentContainer = document.getElementById('content-container');
     }
-    
+
     if (!contents || contents.length === 0) {
         contentContainer.innerHTML = `
             <div class="empty">
@@ -337,10 +337,10 @@ function renderContents(contents) {
     contents.forEach(content => {
         const section = document.createElement('section');
         section.className = 'text-block';
-        
+
         let contentHtml = '';
         let downloadButton = '';
-        
+
         if (content.type === 'image' || content.type === 'file') {
             if (content.type === 'image') {
                 contentHtml = `<div class="image"><img src="${content.content}" alt="${content.title}" loading="lazy"></div>`;
@@ -385,14 +385,14 @@ function renderContents(contents) {
                 <button class="btn btn-delete" onclick="deleteContent(${content.id})">删除</button>
             </div>
         `;
-        
+
         fragment.appendChild(section);
     });
 
     // 一次性更新DOM
     contentContainer.innerHTML = '';
     contentContainer.appendChild(fragment);
-    
+
     // 延迟高亮代码
     requestAnimationFrame(() => {
         Prism.highlightAll();
@@ -400,12 +400,12 @@ function renderContents(contents) {
 }
 
 // 删除内容函数
-window.deleteContent = async function(id) {
+window.deleteContent = async function (id) {
     const confirmed = await showConfirmDialog(
         '确认删除',
         '确定要删除这条内容吗？此操作无法撤销。'
     );
-    
+
     if (confirmed) {
         try {
             const response = await fetch(`${API_BASE_URL}/${id}`, {
@@ -414,12 +414,12 @@ window.deleteContent = async function(id) {
                     'Accept': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || '删除失败');
             }
-            
+
             contentCache = contentCache.filter(item => item.id !== id);
             renderContents(contentCache);
             showToast('删除成功！');
@@ -431,7 +431,7 @@ window.deleteContent = async function(id) {
 }
 
 // 类型切换函数
-window.handleTypeChange = function(type) {
+window.handleTypeChange = function (type) {
     const contentGroup = document.getElementById('contentGroup');
     const imageGroup = document.getElementById('imageGroup');
     const fileGroup = document.getElementById('fileGroup');
@@ -459,7 +459,7 @@ window.handleTypeChange = function(type) {
     } else if (type === 'file') {
         fileGroup.style.display = 'block';
         editFile.required = true;
-        
+
         // 如果没有选择文件，显示默认的文件信息
         if (!editFile.files || !editFile.files[0]) {
             fileInfo.innerHTML = `
@@ -478,7 +478,7 @@ window.handleTypeChange = function(type) {
 }
 
 // 编辑内容函数
-window.editContent = function(id) {
+window.editContent = function (id) {
     const content = contentCache.find(item => item.id === id);
     if (!content) return;
 
@@ -511,13 +511,13 @@ window.editContent = function(id) {
     document.getElementById('editType').value = content.type;
     document.getElementById('editTitle').value = content.title;
     document.getElementById('editContent').value = content.content;
-    
+
     // 如果是图片类型，显示预览
     if (content.type === 'image') {
         const preview = document.getElementById('imagePreview');
         preview.innerHTML = `<img src="${content.content}" alt="预览">`;
     }
-    
+
     handleTypeChange(content.type);
     document.getElementById('editModal').style.display = 'block';
 }
@@ -528,7 +528,7 @@ async function initStorageToggle() {
     const storageToggle = document.createElement('button');
     storageToggle.className = 'storage-toggle';
     storageToggle.setAttribute('aria-label', '切换存储类型');
-    
+
     // 从 localStorage 获取存储类型，如果没有则从服务器获取默认值
     let currentStorage = localStorage.getItem('storageType');
     if (!currentStorage) {
@@ -622,7 +622,7 @@ if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', async () => {
     // 初始化前先获取同步间隔
     await getSyncInterval();
-    
+
     contentContainer = document.getElementById('content-container');
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editForm');
@@ -641,7 +641,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         editForm.addEventListener('submit', handleFormSubmit);
         editImage.addEventListener('change', handleImagePreview);
-        
+
         // 添加全局粘贴事件监听
         document.addEventListener('paste', handlePaste);
     }
@@ -650,10 +650,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handlePaste(event) {
         const items = event.clipboardData?.items;
         if (!items) return;
-        
+
         for (const item of items) {
             console.log('粘贴类型:', item.type);
-            
+
             // 处理图片
             if (item.type.indexOf('image') !== -1) {
                 const file = item.getAsFile();
@@ -661,31 +661,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // 创建一个新的 FileList 对象
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
-                    
+
                     // 重置表单
                     currentEditId = null;
                     const editType = document.getElementById('editType');
                     const editTitle = document.getElementById('editTitle');
                     const editImage = document.getElementById('editImage');
                     const imagePreview = document.getElementById('imagePreview');
-                    
+
                     editType.value = 'image';
                     editTitle.value = `粘贴的图片_${new Date().getTime()}.png`;
                     editImage.files = dataTransfer.files;
-                    
+
                     // 预览图片
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         imagePreview.innerHTML = `<img src="${e.target.result}" alt="预览">`;
                     };
                     reader.readAsDataURL(file);
-                    
+
                     handleTypeChange('image');
                     document.getElementById('editModal').style.display = 'block';
                     return;
                 }
             }
-            
+
             // 处理文件
             else if (item.kind === 'file' && !item.type.startsWith('image/')) {
                 const file = item.getAsFile();
@@ -693,38 +693,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // 创建一个新的 FileList 对象
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
-                    
+
                     // 重置表单
                     currentEditId = null;
                     const editType = document.getElementById('editType');
                     const editTitle = document.getElementById('editTitle');
                     const editFile = document.getElementById('editFile');
-                    
+
                     editType.value = 'file';
                     editTitle.value = file.name;
                     editFile.files = dataTransfer.files;
-                    
+
                     handleTypeChange('file');
-                    
+
                     // 使用统一的文件信息显示函数
                     updateFileInfo(file);
-                    
+
                     document.getElementById('editModal').style.display = 'block';
                     return;
                 }
             }
-            
+
             // 处理文本
             else if (item.type === 'text/plain') {
                 item.getAsString(async (text) => {
                     // 检测是否为代码
                     const isCode = detectCodeContent(text);
-                    
+
                     currentEditId = null;
                     document.getElementById('editType').value = isCode ? 'code' : 'text';
                     document.getElementById('editTitle').value = '';
                     document.getElementById('editContent').value = text;
-                    
+
                     handleTypeChange(isCode ? 'code' : 'text');
                     document.getElementById('editModal').style.display = 'block';
                 });
@@ -762,9 +762,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 立即设置标题
             const titleInput = document.getElementById('editTitle');
             titleInput.value = file.name;
-            
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const preview = document.getElementById('imagePreview');
                 preview.innerHTML = `<img src="${e.target.result}" alt="预览">`;
             };
@@ -773,13 +773,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 处理文件选择和标题
-    window.handleFileSelect = function(event) {
+    window.handleFileSelect = function (event) {
         const file = event.target.files[0];
         if (file) {
             // 立即设置标题
             const titleInput = document.getElementById('editTitle');
             titleInput.value = file.name;
-            
+
             // 使用统一的文件信息显示函数
             updateFileInfo(file);
         }
@@ -818,20 +818,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Accept': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.details || data.error || '加载失败');
             }
-            
+
             const data = await response.json();
-            
+
             // 只有当数据发生变化时才重新渲染
             if (JSON.stringify(contentCache) !== JSON.stringify(data)) {
                 contentCache = data || [];
                 renderContents(contentCache);
             }
-            
+
             lastUpdateTime = Date.now();
         } catch (error) {
             console.error('加载内容失败:', error);
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 打开模态框
-    window.openModal = function() {
+    window.openModal = function () {
         currentEditId = null;
         const editForm = document.getElementById('editForm');
         const editType = document.getElementById('editType');
@@ -868,10 +868,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         editType.value = 'text';
         editTitle.value = '';
         editContent.value = '';
-        
+
         // 清除图片预览
         imagePreview.innerHTML = '';
-        
+
         // 重置文件信息为默认状态
         if (fileInfo) {
             fileInfo.innerHTML = `
@@ -883,7 +883,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         }
-        
+
         // 清除文件输入框的值
         if (editImage) {
             editImage.value = '';
@@ -897,7 +897,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 关闭模态框
-    window.closeModal = function() {
+    window.closeModal = function () {
         document.getElementById('editModal').style.display = 'none';
         document.getElementById('editForm').reset();
         document.getElementById('imagePreview').innerHTML = '';
@@ -907,21 +907,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 处理表单提交
     async function handleFormSubmit(event) {
         event.preventDefault();
-        
+
         const submitButton = event.submitter;
         submitButton.disabled = true;
         const originalText = submitButton.textContent;
         submitButton.innerHTML = '保存中... <span class="loading-spinner"></span>';
-        
+
         try {
             const type = document.getElementById('editType').value;
             const title = document.getElementById('editTitle').value;
             let content = '';
-            
+
             if (type === 'image') {
                 const imageFile = document.getElementById('editImage').files[0];
                 const existingContent = document.getElementById('editContent').value;
-                
+
                 if (!imageFile && existingContent) {
                     content = existingContent;
                 } else if (imageFile) {
@@ -929,20 +929,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!title) {
                         document.getElementById('editTitle').value = imageFile.name;
                     }
-                    
+
                     const formData = new FormData();
                     formData.append('image', imageFile);
-                    
+
                     const uploadResponse = await fetch(IMAGES_API_URL, {
                         method: 'POST',
                         body: formData
                     });
-                    
+
                     if (!uploadResponse.ok) {
                         const errorData = await uploadResponse.json();
                         throw new Error(errorData.error || '图片上传失败');
                     }
-                    
+
                     const { url } = await uploadResponse.json();
                     content = url;
                 } else {
@@ -951,7 +951,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (type === 'file') {
                 const file = document.getElementById('editFile').files[0];
                 const existingContent = document.getElementById('editContent').value;
-                
+
                 if (!file && existingContent) {
                     content = existingContent;
                 } else if (file) {
@@ -959,10 +959,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!title) {
                         document.getElementById('editTitle').value = file.name;
                     }
-                    
+
                     const formData = new FormData();
                     formData.append('file', file);
-                    
+
                     console.log('开始上传文件:', file.name);
                     const uploadResponse = await fetch(FILES_UPLOAD_URL, {
                         method: 'POST',
@@ -980,11 +980,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.error('解析响应失败:', e);
                         throw new Error('服务器响应格式错误');
                     }
-                    
+
                     if (!uploadResponse.ok) {
                         throw new Error(responseData.error || '文件上传失败');
                     }
-                    
+
                     if (!responseData.url) {
                         console.error('响应数据:', responseData);
                         throw new Error('上传成功但未返回文件URL');
@@ -1001,19 +1001,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 重新获取标题，因为可能在上传过程中被设置
             const finalTitle = document.getElementById('editTitle').value;
-            
+
             if (!type || !finalTitle || !content) {
                 throw new Error('请填写所有必要字段');
             }
-            
+
             const formData = { type, title: finalTitle, content };
-            
+
             if (currentEditId) {
                 await updateContent(currentEditId, formData);
             } else {
                 await createContent(formData);
             }
-            
+
             closeModal();
             await loadContents(false);
             showToast('保存成功！');
@@ -1036,12 +1036,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             body: JSON.stringify(data)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || '创建内容失败');
         }
-        
+
         return await response.json();
     }
 
@@ -1055,12 +1055,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             body: JSON.stringify(data)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || '更新内容败');
         }
-        
+
         return await response.json();
     }
 }); 

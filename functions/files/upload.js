@@ -15,6 +15,36 @@ export async function onRequest(context) {
             });
         }
 
+        // 检查文件类型和大小限制
+        const fileType = file.type.toLowerCase();
+        let maxSize;
+        let sizeError;
+
+        if (fileType.startsWith('image/')) {
+            maxSize = 10 * 1024 * 1024; // 10MB for images
+            sizeError = '图片';
+        } else if (fileType.startsWith('video/')) {
+            maxSize = 50 * 1024 * 1024; // 50MB for videos
+            sizeError = '视频';
+        } else {
+            maxSize = 50 * 1024 * 1024; // 50MB for other files
+            sizeError = '文件';
+        }
+
+        if (file.size > maxSize) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(0);
+            return new Response(JSON.stringify({ 
+                error: `${sizeError}大小超过限制，最大允许 ${maxSizeMB}MB，当前大小 ${sizeMB}MB` 
+            }), {
+                status: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
+
         // 获取存储类型
         const storageType = context.env.STORAGE_TYPE || 'KV';
 

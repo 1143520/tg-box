@@ -9,6 +9,34 @@ export async function onRequestPost({ request, env }) {
             throw new Error('No file provided');
         }
 
+        // 检查文件类型
+        if (!file.type.toLowerCase().startsWith('image/')) {
+            return new Response(JSON.stringify({ 
+                error: `不支持的文件类型：${file.type}，只能上传图片文件` 
+            }), {
+                status: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
+
+        // 检查文件大小
+        const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+        if (file.size > MAX_IMAGE_SIZE) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            return new Response(JSON.stringify({ 
+                error: `图片大小超过限制，最大允许 10MB，当前大小 ${sizeMB}MB` 
+            }), {
+                status: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
+
         // 获取存储类型
         const storageType = env.STORAGE_TYPE || 'KV';
 
