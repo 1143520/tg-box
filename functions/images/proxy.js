@@ -21,7 +21,7 @@ export async function onRequestGet({ request, env }) {
         
         // 确定内容类型
         let contentType = response.headers.get('content-type');
-        // 如果是图片文件，确保使用正确的 MIME 类型
+        // 根据文件扩展名设置正确的 MIME 类型
         if (filePath.match(/\.(jpg|jpeg)$/i)) {
             contentType = 'image/jpeg';
         } else if (filePath.match(/\.png$/i)) {
@@ -30,24 +30,61 @@ export async function onRequestGet({ request, env }) {
             contentType = 'image/gif';
         } else if (filePath.match(/\.webp$/i)) {
             contentType = 'image/webp';
+        } else if (filePath.match(/\.mp4$/i)) {
+            contentType = 'video/mp4';
+        } else if (filePath.match(/\.webm$/i)) {
+            contentType = 'video/webm';
+        } else if (filePath.match(/\.avi$/i)) {
+            contentType = 'video/x-msvideo';
+        } else if (filePath.match(/\.mov$/i)) {
+            contentType = 'video/quicktime';
         }
 
         // 读取文件内容
         const arrayBuffer = await response.arrayBuffer();
 
-        // 返回文件，设置正确的 Content-Type 和其他头部
+        // 获取文件大小
+        const size = arrayBuffer.byteLength;
+        
+        // 检查是否是范围请求
+        const rangeHeader = request.headers.get('Range');
+        if (rangeHeader) {
+            const matches = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+            if (matches) {
+                const start = parseInt(matches[1], 10);
+                const end = matches[2] ? parseInt(matches[2], 10) : size - 1;
+                const chunk = arrayBuffer.slice(start, end + 1);
+                
+                return new Response(chunk, {
+                    status: 206,
+                    headers: {
+                        'Content-Type': contentType || 'application/octet-stream',
+                        'Content-Range': `bytes ${start}-${end}/${size}`,
+                        'Accept-Ranges': 'bytes',
+                        'Content-Length': chunk.byteLength.toString(),
+                        'Content-Disposition': 'inline',
+                        'Cache-Control': 'public, max-age=31536000',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            }
+        }
+
+        // 返回完整文件
         return new Response(arrayBuffer, {
             headers: {
                 'Content-Type': contentType || 'application/octet-stream',
-                'Content-Disposition': 'inline',  // 这里使用 inline 而不是 attachment
+                'Content-Length': size.toString(),
+                'Accept-Ranges': 'bytes',
+                'Content-Disposition': 'inline',
                 'Cache-Control': 'public, max-age=31536000',
                 'Access-Control-Allow-Origin': '*',
-                'X-Content-Type-Options': 'nosniff'  // 防止浏览器猜测内容类型
+                'X-Content-Type-Options': 'nosniff'
             }
         });
     } catch (error) {
         console.error('Proxy error:', error);
-        return new Response('Error fetching image', { 
+        return new Response('Error fetching file: ' + error.message, { 
             status: 500,
             headers: {
                 'Content-Type': 'text/plain',
