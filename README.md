@@ -30,6 +30,7 @@ Drop中转站是一个基于 Cloudflare Pages 的多功能内容分享平台，�
   - Cloudflare Workers 处理动态请求
   - Cloudflare D1 SQLite 数据库存储内容
   - Cloudflare KV 存储图片和文件
+  - Telegram Bot API 作为可选的文件存储后端
 
 ## 项目结构
 
@@ -96,8 +97,47 @@ Drop中转站是一个基于 Cloudflare Pages 的多功能内容分享平台，�
    ```bash
    npm install -g wrangler
    ```
+4. （可选）如果使用 Telegram 存储：
+   - 创建 Telegram Bot
+   - 创建用于存储的 Telegram 频道或群组
 
-### 2. 本地开发
+### 2. Telegram 机器人配置（可选）
+
+如果你选择使用 Telegram 作为文件存储后端，需要完成以下步骤：
+
+1. 创建 Telegram Bot：
+   - 在 Telegram 中找到 [@BotFather](https://t.me/BotFather)
+   - 发送 `/newbot` 命令
+   - 按提示设置机器人名称和用户名
+   - 保存获得的 Bot Token
+
+2. 创建存储频道：
+   - 在 Telegram 创建一个新频道或群组
+   - 将机器人添加为频道/群组管理员
+   - 获取频道/群组 ID：
+     - 将频道/群组设为公开
+     - 发送一条消息并转发到 [@getidsbot](https://t.me/getidsbot)
+     - 记录获得的 chat id（格式如：-1001234567890）
+
+3. 配置环境变量：
+   在 Cloudflare Pages 的环境变量中添加：
+   - `STORAGE_TYPE`: 设置为 `TELEGRAM`
+   - `TELEGRAM_BOT_TOKEN`: 你的机器人 Token
+   - `TELEGRAM_CHAT_ID`: 存储频道/群组的 ID
+
+4. 权限设置：
+   - 确保机器人在频道/群组中具有发送消息和文件的权限
+   - 建议将频道/群组设为私密，以保护文件安全
+
+5. 存储限制：
+   - 单个文件最大支持 2GB
+   - 图片和视频会自动压缩
+   - 所有类型文件都支持上传
+   - 下载链接格式：
+     - 小于 20MB 的文件：直接下载链接
+     - 大于 20MB 的文件：Telegram 消息链接
+
+### 3. 本地开发
 
 1. 克隆项目：
    ```bash
@@ -133,7 +173,7 @@ Drop中转站是一个基于 Cloudflare Pages 的多功能内容分享平台，�
    npm run dev
    ```
 
-### 3. 部署到生产环境
+### 4. 部署到生产环境
 
 1. 在 Cloudflare Pages 中创建新项目
 2. 连接 GitHub 仓库
@@ -154,7 +194,7 @@ Drop中转站是一个基于 Cloudflare Pages 的多功能内容分享平台，�
    npm run deploy
    ```
 
-### 4. 配置说明
+### 5. 配置说明
 
 #### 同步间隔设置
 - 默认值：30秒（30000毫秒）
@@ -170,13 +210,33 @@ Drop中转站是一个基于 Cloudflare Pages 的多功能内容分享平台，�
 ## 常见问题
 
 1. **Q: 上传文件大小有限制吗？**
-   A: 是的，单个文件最大支持 25MB。
+   A: 
+   - 使用 Cloudflare KV 存储时，单个文件最大支持 25MB
+   - 使用 Telegram 存储时，单个文件最大支持 2GB
 
 2. **Q: 支持哪些代码语言的高亮？**
    A: 支持所有主流编程语言，包括但不限于：JavaScript、Python、Java、C++、Go等。
 
 3. **Q: 如何备份数据？**
-   A: 可以通过 Cloudflare D1 的导出功能备份数据库，KV 存储的文件需要单独下载备份。
+   A: 
+   - 数据库内容：通过 Cloudflare D1 的导出功能备份
+   - KV 存储的文件：需要单独下载备份
+   - Telegram 存储的文件：在 Telegram 频道/群组中永久保存
+
+4. **Q: 为什么选择 Telegram 作为存储后端？**
+   A:
+   - 无需额外服务器和存储费用
+   - 支持大文件（最大 2GB）
+   - 全球 CDN 加速
+   - 可靠的文件存储和访问
+   - 方便的文件管理和备份
+
+5. **Q: Telegram 存储的文件安全吗？**
+   A: 
+   - 文件存储在私密频道/群组中
+   - 访问需要通过应用的 API
+   - 建议定期检查频道/群组权限设置
+   - 敏感文件建议加密后再上传
 
 ## 技术支持
 
