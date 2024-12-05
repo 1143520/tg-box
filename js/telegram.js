@@ -6,34 +6,65 @@ export default class TelegramStorage {
         this.fileApiBase = 'https://api.telegram.org/file/bot' + botToken;
     }
 
+    isImageFile(filename) {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+        const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+        return imageExtensions.includes(ext);
+    }
+
     async sendFile(arrayBuffer, filename) {
         const formData = new FormData();
         const blob = new Blob([arrayBuffer]);
         formData.append('chat_id', this.chatId);
-        formData.append('document', blob, filename);
 
-        const response = await fetch(`${this.apiBase}/sendDocument`, {
-            method: 'POST',
-            body: formData
-        });
+        // 判断是否为图片文件
+        const isImage = this.isImageFile(filename);
+        if (isImage) {
+            formData.append('photo', blob, filename);
+            const response = await fetch(`${this.apiBase}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
 
-        const result = await response.json();
-        if (!result.ok) {
-            throw new Error('Failed to send file to Telegram: ' + result.description);
-        }
+            const result = await response.json();
+            if (!result.ok) {
+                throw new Error('Failed to send photo to Telegram: ' + result.description);
+            }
 
-        // 获取文件ID
-        const fileId = result.result.document?.file_id;
-        if (fileId) {
-            // 获取文件的直接下载链接
-            const fileInfo = await this.getFileUrl(fileId);
+            // 获取最大尺寸的图片
+            const photo = result.result.photo;
+            const largestPhoto = photo[photo.length - 1];
+            
+            // 获取图片的直接链接
+            const fileInfo = await this.getFileUrl(largestPhoto.file_id);
             return {
                 ...result.result,
                 file_url: fileInfo.url
             };
-        }
+        } else {
+            // 非图片文件使用 sendDocument
+            formData.append('document', blob, filename);
+            const response = await fetch(`${this.apiBase}/sendDocument`, {
+                method: 'POST',
+                body: formData
+            });
 
-        return result.result;
+            const result = await response.json();
+            if (!result.ok) {
+                throw new Error('Failed to send file to Telegram: ' + result.description);
+            }
+
+            const fileId = result.result.document?.file_id;
+            if (fileId) {
+                const fileInfo = await this.getFileUrl(fileId);
+                return {
+                    ...result.result,
+                    file_url: fileInfo.url
+                };
+            }
+
+            return result.result;
+        }
     }
 
     async sendMessage(text) {

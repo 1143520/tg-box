@@ -64,28 +64,40 @@ export async function onRequestPost({ request, env }) {
         messageText = `<b>${title}</b>\n\n${content}`;
       }
 
-      // 发送到Telegram
-      const result = await telegram.sendMessage(messageText);
-      
-      // 保存到数据库时使用Telegram消息URL
-      const { success } = await env.DB.prepare(
-        'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
-      ).bind(type, title, result.url).run();
+      try {
+        // 发送到Telegram
+        const result = await telegram.sendMessage(messageText);
+        
+        // 确保有消息URL再保存到数据库
+        if (result && result.message_id) {
+          const messageUrl = `https://t.me/c/${env.TELEGRAM_CHAT_ID}/${result.message_id}`;
+          
+          // 保存到数据库
+          const { success } = await env.DB.prepare(
+            'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+          ).bind(type, title, messageUrl).run();
 
-      if (!success) {
-        throw new Error('创建内容失败');
-      }
+          if (!success) {
+            throw new Error('创建内容失败');
+          }
 
-      return new Response(JSON.stringify({ 
-        type, 
-        title, 
-        content: result.url
-      }), {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          return new Response(JSON.stringify({ 
+            type, 
+            title, 
+            content: messageUrl
+          }), {
+            headers: { 
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        } else {
+          throw new Error('发送消息成功但未获取到消息ID');
         }
-      });
+      } catch (error) {
+        console.error('Telegram error:', error);
+        throw error;
+      }
     }
 
     // 其他情况按原来的逻辑处理

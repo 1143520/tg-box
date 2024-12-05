@@ -22,12 +22,12 @@ export async function onRequestPost({ request, env }) {
 
             const arrayBuffer = await imageFile.arrayBuffer();
             const result = await telegram.sendFile(arrayBuffer, imageFile.name);
-            url = result.file_url || result.photo?.[result.photo.length - 1]?.file_url || result.url;
             
-            if (!url && result.file_id) {
-                const fileInfo = await telegram.getFileUrl(result.file_id);
-                url = fileInfo.url;
+            // 确保获取到了文件URL
+            if (!result.file_url) {
+                throw new Error('未能获取到文件URL');
             }
+            url = result.file_url;
         } else {
             // 使用KV存储
             if (!env.IMAGES) {
@@ -50,6 +50,11 @@ export async function onRequestPost({ request, env }) {
 
             const baseUrl = new URL(request.url).origin;
             url = `${baseUrl}/images/${filename}`;
+        }
+
+        // 确保有URL才返回成功响应
+        if (!url) {
+            throw new Error('未能获取到文件URL');
         }
 
         return new Response(
