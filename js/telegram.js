@@ -85,7 +85,12 @@ export default class TelegramStorage {
             throw new Error('Failed to send message to Telegram: ' + result.description);
         }
 
-        return result.result;
+        // 返回消息ID和原始文本
+        return {
+            message_id: result.result.message_id,
+            text: text,  // 返回原始文本内容
+            url: `https://t.me/c/${this.chatId}/${result.result.message_id}`
+        };
     }
 
     async getFileUrl(fileId) {
@@ -105,10 +110,11 @@ export default class TelegramStorage {
             throw new Error('Failed to get file info from Telegram: ' + result.description);
         }
 
-        // 返回文件的直接下载链接
+        // 使用代理 URL
+        const baseUrl = window.location.origin;
         return {
             ...result.result,
-            url: `${this.fileApiBase}/${result.result.file_path}`
+            url: `${baseUrl}/images/proxy?path=${result.result.file_path}`
         };
     }
 } 

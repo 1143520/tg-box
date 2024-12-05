@@ -68,14 +68,12 @@ export async function onRequestPost({ request, env }) {
         // 发送到Telegram
         const result = await telegram.sendMessage(messageText);
         
-        // 确保有消息URL再保存到数据库
+        // 确保有消息ID再保存到数据库
         if (result && result.message_id) {
-          const messageUrl = `https://t.me/c/${env.TELEGRAM_CHAT_ID}/${result.message_id}`;
-          
-          // 保存到数据库
+          // 保存原始内容到数据库，而不是消息链接
           const { success } = await env.DB.prepare(
             'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
-          ).bind(type, title, messageUrl).run();
+          ).bind(type, title, content).run();
 
           if (!success) {
             throw new Error('创建内容失败');
@@ -84,7 +82,7 @@ export async function onRequestPost({ request, env }) {
           return new Response(JSON.stringify({ 
             type, 
             title, 
-            content: messageUrl
+            content  // 返回原始内容
           }), {
             headers: { 
               'Content-Type': 'application/json',
