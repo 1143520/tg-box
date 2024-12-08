@@ -9,7 +9,8 @@ const DOWNLOAD_API_URL = '/download';
 const STORAGE_KEYS = {
     SYNC_INTERVAL: 'syncInterval',
     CONTENT_CACHE: 'contentCache',
-    LAST_UPDATE: 'lastUpdate'
+    LAST_UPDATE: 'lastUpdate',
+    CONTENT_HASH: 'contentHash'
 };
 
 // 缓存有效期（1个月）
@@ -510,7 +511,7 @@ window.handleTypeChange = function (type) {
         fileGroup.style.display = 'block';
         editFile.required = true;
 
-        // 如果没有选择文件，显示默认的文件信息
+        // 如果没有选择文件，显示默认文件信息
         if (!editFile.files || !editFile.files[0]) {
             fileInfo.innerHTML = `
                 <div class="file-preview">
@@ -760,23 +761,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateCheckInterval = setInterval(() => loadContents(false), syncInterval);
     }
 
-    // 加载有内容
+    // 计算内容哈希值
+    function calculateContentHash(content) {
+        return JSON.stringify(content);
+    }
+
+    // 加载内容
     async function loadContents(showLoading = true) {
         if (!contentContainer) {
             contentContainer = document.getElementById('content-container');
         }
 
         try {
-            // 检查是否可以使用缓存
-            const cachedContent = getFromLocalStorage(STORAGE_KEYS.CONTENT_CACHE);
-            const lastUpdate = getFromLocalStorage(STORAGE_KEYS.LAST_UPDATE);
-            
-            if (cachedContent && lastUpdate && Date.now() - lastUpdate < syncInterval) {
-                contentCache = cachedContent;
-                renderContents(contentCache);
-                return;
-            }
-
+            // 获取服务器数据
             const response = await fetch(API_BASE_URL, {
                 headers: {
                     'Accept': 'application/json'
@@ -789,21 +786,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const data = await response.json();
+            const newContentHash = calculateContentHash(data);
+            const oldContentHash = getFromLocalStorage(STORAGE_KEYS.CONTENT_HASH);
 
-            // 只有当数据发生变化时才重新渲染和缓存
-            if (JSON.stringify(contentCache) !== JSON.stringify(data)) {
+            // 如果内容有变化，更新缓存和显示
+            if (newContentHash !== oldContentHash) {
                 contentCache = data || [];
-                // 保存到本地存储
+                // 更新本地存储
                 saveToLocalStorage(STORAGE_KEYS.CONTENT_CACHE, contentCache);
+                saveToLocalStorage(STORAGE_KEYS.CONTENT_HASH, newContentHash);
                 saveToLocalStorage(STORAGE_KEYS.LAST_UPDATE, Date.now());
+                // 渲染新内容
                 renderContents(contentCache);
+                console.log('检测到内容变化，已更新');
+            } else if (showLoading) {
+                // 如果是首次加载且内容没有变化，仍然需要渲染缓存的内容
+                const cachedContent = getFromLocalStorage(STORAGE_KEYS.CONTENT_CACHE);
+                if (cachedContent) {
+                    contentCache = cachedContent;
+                    renderContents(contentCache);
+                }
             }
 
             lastUpdateTime = Date.now();
         } catch (error) {
             console.error('加载内容失败:', error);
             if (showLoading) {
-                showError(`加载内容失败: ${error.message}`);
+                // 如果服务器请求失败，尝试使用缓存内容
+                const cachedContent = getFromLocalStorage(STORAGE_KEYS.CONTENT_CACHE);
+                if (cachedContent) {
+                    contentCache = cachedContent;
+                    renderContents(contentCache);
+                    showToast('使用缓存内容显示', 'warning');
+                } else {
+                    showError(`加载内容失败: ${error.message}`);
+                }
             }
         }
     }
