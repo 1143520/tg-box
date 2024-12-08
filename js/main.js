@@ -5,6 +5,16 @@ const FILES_API_URL = '/files';
 const FILES_UPLOAD_URL = '/files/upload';
 const DOWNLOAD_API_URL = '/download';
 
+// 本地存储键名
+const STORAGE_KEYS = {
+    SYNC_INTERVAL: 'syncInterval',
+    CONTENT_CACHE: 'contentCache',
+    LAST_UPDATE: 'lastUpdate'
+};
+
+// 缓存有效期（1个月）
+const CACHE_EXPIRY = 30 * 24 * 60 * 60 * 1000;
+
 // 全局变量
 let currentEditId = null;
 let lastUpdateTime = Date.now();
@@ -13,17 +23,57 @@ let contentCache = [];
 let contentContainer;
 let syncInterval = 30000; // 默认30秒
 
+// 本地存储工具函数
+function saveToLocalStorage(key, value) {
+    const data = {
+        value,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getFromLocalStorage(key) {
+    const data = localStorage.getItem(key);
+    if (!data) return null;
+
+    try {
+        const parsed = JSON.parse(data);
+        const now = Date.now();
+        
+        // 检查是否过期
+        if (now - parsed.timestamp > CACHE_EXPIRY) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        
+        return parsed.value;
+    } catch (e) {
+        localStorage.removeItem(key);
+        return null;
+    }
+}
+
 // 获取同步间隔配置
 async function getSyncInterval() {
     try {
+        // 先从本地存储获取
+        const cachedInterval = getFromLocalStorage(STORAGE_KEYS.SYNC_INTERVAL);
+        if (cachedInterval) {
+            syncInterval = cachedInterval;
+            console.log('从本地存储加载同步间隔:', syncInterval, 'ms');
+            return;
+        }
+
+        // 如果本地没有，从服务器获取
         const response = await fetch('/_vars/SYNC_INTERVAL');
         if (response.ok) {
             const interval = await response.text();
-            // 确保interval是一个有效的数字且不小于5秒
             const parsedInterval = parseInt(interval);
             if (!isNaN(parsedInterval) && parsedInterval >= 5000) {
                 syncInterval = parsedInterval;
-                console.log('已从环境变量加载同步间隔:', syncInterval, 'ms');
+                // 保存到本地存储
+                saveToLocalStorage(STORAGE_KEYS.SYNC_INTERVAL, syncInterval);
+                console.log('已从服务器加载并缓存同步间隔:', syncInterval, 'ms');
             }
         }
     } catch (error) {
@@ -717,6 +767,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
+            // 检查是否可以使用缓存
+            const cachedContent = getFromLocalStorage(STORAGE_KEYS.CONTENT_CACHE);
+            const lastUpdate = getFromLocalStorage(STORAGE_KEYS.LAST_UPDATE);
+            
+            if (cachedContent && lastUpdate && Date.now() - lastUpdate < syncInterval) {
+                contentCache = cachedContent;
+                renderContents(contentCache);
+                return;
+            }
+
             const response = await fetch(API_BASE_URL, {
                 headers: {
                     'Accept': 'application/json'
@@ -730,9 +790,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const data = await response.json();
 
-            // 只有当数据发生变化时才重新渲染
+            // 只有当数据发生变化时才重新渲染和缓存
             if (JSON.stringify(contentCache) !== JSON.stringify(data)) {
                 contentCache = data || [];
+                // 保存到本地存储
+                saveToLocalStorage(STORAGE_KEYS.CONTENT_CACHE, contentCache);
+                saveToLocalStorage(STORAGE_KEYS.LAST_UPDATE, Date.now());
                 renderContents(contentCache);
             }
 
