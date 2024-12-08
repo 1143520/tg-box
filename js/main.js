@@ -65,20 +65,32 @@ async function getSyncInterval() {
             return;
         }
 
-        // 如果本地没有，从服务器获取
-        const response = await fetch('/_vars/SYNC_INTERVAL');
-        if (response.ok) {
-            const interval = await response.text();
-            const parsedInterval = parseInt(interval);
-            if (!isNaN(parsedInterval) && parsedInterval >= 5000) {
-                syncInterval = parsedInterval;
-                // 保存到本地存储
-                saveToLocalStorage(STORAGE_KEYS.SYNC_INTERVAL, syncInterval);
-                console.log('已从服务器加载并缓存同步间隔:', syncInterval, 'ms');
+        // 如果本地没有，尝试从服务器获取
+        try {
+            const response = await fetch('/_vars/SYNC_INTERVAL');
+            if (response.ok) {
+                const interval = await response.text();
+                const parsedInterval = parseInt(interval);
+                if (!isNaN(parsedInterval) && parsedInterval >= 5000) {
+                    syncInterval = parsedInterval;
+                    // 保存到本地存储
+                    saveToLocalStorage(STORAGE_KEYS.SYNC_INTERVAL, syncInterval);
+                    console.log('已从服务器加载并缓存同步间隔:', syncInterval, 'ms');
+                    return;
+                }
             }
+        } catch (error) {
+            console.log('服务器同步间隔配置不可用，使用默认值');
         }
+
+        // 如果服务器获取失败或无效，使用默认值并保存到本地
+        syncInterval = 30000; // 默认30秒
+        saveToLocalStorage(STORAGE_KEYS.SYNC_INTERVAL, syncInterval);
+        console.log('使用默认同步间隔:', syncInterval, 'ms');
     } catch (error) {
-        console.warn('无法获取同步间隔配置，使用默认值:', syncInterval, 'ms');
+        // 如果出现任何错误，确保使用默认值
+        syncInterval = 30000;
+        console.warn('设置同步间隔时出错，使用默认值:', syncInterval, 'ms');
     }
 }
 
@@ -336,7 +348,7 @@ async function downloadFile(url, filename) {
             }
         }
 
-        // 合并所有chunks
+        // 合所有chunks
         const blob = new Blob(chunks);
         const blobUrl = window.URL.createObjectURL(blob);
 
