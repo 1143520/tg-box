@@ -49,19 +49,34 @@ export async function onRequestPost({ request, env }) {
 
                 // 构造代理URL
                 const baseUrl = new URL(request.url).origin;
-                const proxyUrl = `${baseUrl}/images/proxy?path=${result.file_url.split('/file/bot')[1].split('/')[1]}`;
+                let proxyUrl;
+                
+                // 检查 file_url 的格式并相应地构造代理URL
+                if (result.file_url.includes('/file/bot')) {
+                    const filePath = result.file_url.split('/file/bot')[1].split('/').slice(1).join('/');
+                    proxyUrl = `${baseUrl}/images/proxy?path=${filePath}`;
+                } else {
+                    // 如果是其他格式的URL，直接使用
+                    proxyUrl = result.file_url;
+                }
+
+                console.log('Constructed proxy URL:', proxyUrl);
 
                 // 保存到数据库
                 try {
-                    const { success } = await env.DB.prepare(
+                    const stmt = await env.DB.prepare(
                         'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
-                    ).bind('image', file.name, proxyUrl).run();
+                    );
+                    const dbResult = await stmt.bind('image', file.name, proxyUrl).run();
+                    console.log('Database insert result:', dbResult);
 
-                    if (!success) {
-                        console.error('Failed to save to database');
+                    if (!dbResult.success) {
+                        console.error('Failed to save to database:', dbResult);
+                        throw new Error('数据库保存失败');
                     }
                 } catch (dbError) {
                     console.error('Database error:', dbError);
+                    throw new Error(`数据库错误: ${dbError.message}`);
                 }
 
                 // 返回统一的响应格式
@@ -110,15 +125,19 @@ export async function onRequestPost({ request, env }) {
 
             // 保存到数据库
             try {
-                const { success } = await env.DB.prepare(
+                const stmt = await env.DB.prepare(
                     'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
-                ).bind('image', file.name, url).run();
+                );
+                const dbResult = await stmt.bind('image', file.name, url).run();
+                console.log('Database insert result:', dbResult);
 
-                if (!success) {
-                    console.error('Failed to save to database');
+                if (!dbResult.success) {
+                    console.error('Failed to save to database:', dbResult);
+                    throw new Error('数据库保存失败');
                 }
             } catch (dbError) {
                 console.error('Database error:', dbError);
+                throw new Error(`数据库错误: ${dbError.message}`);
             }
         }
 
