@@ -3,7 +3,7 @@ import TelegramStorage from '../js/telegram.js';
 export async function onRequestGet({ request, env }) {
   try {
     const { results } = await env.DB.prepare(
-      'SELECT id, type, title, content FROM content_blocks ORDER BY id DESC'
+      'SELECT id, type, title, content FROM content_blocks WHERE source IS NULL OR source != "api" ORDER BY id DESC'
     ).all();
     
     return new Response(JSON.stringify(results), {

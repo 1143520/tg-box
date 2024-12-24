@@ -65,9 +65,9 @@ export async function onRequestPost({ request, env }) {
                 // 保存到数据库
                 try {
                     const stmt = await env.DB.prepare(
-                        'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+                        'INSERT INTO content_blocks (type, title, content, source) VALUES (?, ?, ?, ?)'
                     );
-                    const dbResult = await stmt.bind('image', file.name, proxyUrl).run();
+                    const dbResult = await stmt.bind('image', file.name, proxyUrl, 'api').run();
                     console.log('Database insert result:', dbResult);
 
                     if (!dbResult.success) {
@@ -126,9 +126,9 @@ export async function onRequestPost({ request, env }) {
             // 保存到数据库
             try {
                 const stmt = await env.DB.prepare(
-                    'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+                    'INSERT INTO content_blocks (type, title, content, source) VALUES (?, ?, ?, ?)'
                 );
-                const dbResult = await stmt.bind('image', file.name, url).run();
+                const dbResult = await stmt.bind('image', file.name, url, 'api').run();
                 console.log('Database insert result:', dbResult);
 
                 if (!dbResult.success) {
