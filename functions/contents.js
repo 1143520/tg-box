@@ -41,60 +41,86 @@ export async function onRequestPost({ request, env }) {
     // 获取存储类型
     const storageType = env.STORAGE_TYPE || 'KV';
 
-    // 如果是使用Telegram存储，且是文本类内容
-    if (storageType === 'TELEGRAM' && ['text', 'poetry', 'code'].includes(type)) {
+    // 如果是使用Telegram存储
+    if (storageType === 'TELEGRAM') {
       const telegram = new TelegramStorage(
         env.TELEGRAM_BOT_TOKEN,
         env.TELEGRAM_CHAT_ID
       );
 
-      // 根据不同类型格式化消息
-      let messageText;
-      if (type === 'code') {
-        messageText = `<b>${title}</b>\n\n<pre><code>${content}</code></pre>`;
-      } else if (type === 'poetry') {
-        // 将诗歌每行用<i>标签包裹
-        const formattedPoetry = content
-          .split('\n')
-          .map(line => `<i>${line}</i>`)
-          .join('\n');
-        messageText = `<b>${title}</b>\n\n${formattedPoetry}`;
-      } else {
-        // 普通文本
-        messageText = `<b>${title}</b>\n\n${content}`;
-      }
-
-      try {
-        // 发送到Telegram
-        const result = await telegram.sendMessage(messageText);
-        
-        // 确保有消息ID再保存到数据库
-        if (result && result.message_id) {
-          // 保存原始内容到数据库，而不是消息链接
-          const { success } = await env.DB.prepare(
-            'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
-          ).bind(type, title, content).run();
-
-          if (!success) {
-            throw new Error('创建内容失败');
-          }
-
-          return new Response(JSON.stringify({ 
-            type, 
-            title, 
-            content  // 返回原始内容
-          }), {
-            headers: { 
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*'
-            }
-          });
-        } else {
-          throw new Error('发送消息成功但未获取到消息ID');
+      // 根据不同类型处理内容
+      if (type === 'image') {
+        // 对于图片类型，content应该是图片URL
+        // 确保URL使用代理格式
+        let proxyUrl = content;
+        if (content.includes('/file/bot')) {
+          const filePath = content.split('/file/bot')[1].split('/')[1];
+          proxyUrl = `${new URL(request.url).origin}/images/proxy?path=${filePath}`;
         }
-      } catch (error) {
-        console.error('Telegram error:', error);
-        throw error;
+        
+        // 保存到数据库
+        const { success } = await env.DB.prepare(
+          'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+        ).bind(type, title, proxyUrl).run();
+
+        if (!success) {
+          throw new Error('创建内容失败');
+        }
+
+        return new Response(JSON.stringify({ 
+          type, 
+          title, 
+          content: proxyUrl
+        }), {
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } else if (['text', 'poetry', 'code'].includes(type)) {
+        // 对于文本类内容，使用原有的处理逻辑
+        let messageText;
+        if (type === 'code') {
+          messageText = `<b>${title}</b>\n\n<pre><code>${content}</code></pre>`;
+        } else if (type === 'poetry') {
+          const formattedPoetry = content
+            .split('\n')
+            .map(line => `<i>${line}</i>`)
+            .join('\n');
+          messageText = `<b>${title}</b>\n\n${formattedPoetry}`;
+        } else {
+          messageText = `<b>${title}</b>\n\n${content}`;
+        }
+
+        try {
+          const result = await telegram.sendMessage(messageText);
+          
+          if (result && result.message_id) {
+            const { success } = await env.DB.prepare(
+              'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+            ).bind(type, title, content).run();
+
+            if (!success) {
+              throw new Error('创建内容失败');
+            }
+
+            return new Response(JSON.stringify({ 
+              type, 
+              title, 
+              content
+            }), {
+              headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              }
+            });
+          } else {
+            throw new Error('发送消息成功但未获取到消息ID');
+          }
+        } catch (error) {
+          console.error('Telegram error:', error);
+          throw error;
+        }
       }
     }
 
