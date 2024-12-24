@@ -22,21 +22,6 @@ export async function onRequestPost({ request, env }) {
             });
         }
 
-        // 检查文件大小
-        const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-        if (file.size > MAX_IMAGE_SIZE) {
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            return new Response(JSON.stringify({ 
-                error: `图片大小超过限制，最大允许 10MB，当前大小 ${sizeMB}MB` 
-            }), {
-                status: 400,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                }
-            });
-        }
-
         // 获取存储类型
         const storageType = env.STORAGE_TYPE || 'KV';
 
@@ -62,15 +47,32 @@ export async function onRequestPost({ request, env }) {
                     throw new Error('未能获取到文件URL');
                 }
 
+                // 构造代理URL
+                const baseUrl = new URL(request.url).origin;
+                const proxyUrl = `${baseUrl}/images/proxy?path=${result.file_url.split('/file/bot')[1].split('/')[1]}`;
+
+                // 保存到数据库
+                try {
+                    const { success } = await env.DB.prepare(
+                        'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+                    ).bind('image', file.name, proxyUrl).run();
+
+                    if (!success) {
+                        console.error('Failed to save to database');
+                    }
+                } catch (dbError) {
+                    console.error('Database error:', dbError);
+                }
+
                 // 返回统一的响应格式
                 return new Response(
                     JSON.stringify({
-                        url: result.file_url,
+                        url: proxyUrl,
                         filename: file.name,
                         size: file.size,
                         type: file.type,
-                        telegram_type: result.type,  // 添加 Telegram 文件类型信息
-                        file_id: result.file_id      // 添加 Telegram 文件ID
+                        telegram_type: result.type,
+                        file_id: result.file_id
                     }), {
                         headers: {
                             'Content-Type': 'application/json',
@@ -105,6 +107,19 @@ export async function onRequestPost({ request, env }) {
 
             const baseUrl = new URL(request.url).origin;
             url = `${baseUrl}/images/${filename}`;
+
+            // 保存到数据库
+            try {
+                const { success } = await env.DB.prepare(
+                    'INSERT INTO content_blocks (type, title, content) VALUES (?, ?, ?)'
+                ).bind('image', file.name, url).run();
+
+                if (!success) {
+                    console.error('Failed to save to database');
+                }
+            } catch (dbError) {
+                console.error('Database error:', dbError);
+            }
         }
 
         // 确保有URL才返回成功响应
