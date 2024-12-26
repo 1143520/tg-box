@@ -2,9 +2,10 @@ export async function onRequestGet({ request, env }) {
     try {
         const url = new URL(request.url);
         const filePath = url.searchParams.get('path');
+        const fileId = url.searchParams.get('file_id');
         
-        if (!filePath) {
-            return new Response('Missing file path', { 
+        if (!filePath && !fileId) {
+            return new Response('Missing file path or file_id', { 
                 status: 400,
                 headers: {
                     'Content-Type': 'text/plain',
@@ -13,28 +14,50 @@ export async function onRequestGet({ request, env }) {
             });
         }
 
-        // 构造 Telegram 文件 URL
-        const telegramUrl = `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${filePath}`;
+        let telegramUrl;
+        
+        if (fileId) {
+            // 如果有file_id，先获取最新的file_path
+            const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getFile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    file_id: fileId
+                })
+            });
+
+            const result = await response.json();
+            if (!result.ok) {
+                throw new Error('Failed to get file info from Telegram: ' + result.description);
+            }
+
+            telegramUrl = `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${result.result.file_path}`;
+        } else {
+            // 向后兼容，支持直接使用file_path
+            telegramUrl = `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${filePath}`;
+        }
 
         // 尝试从缓存获取
         const cache = caches.default;
-        const cacheKey = new Request(request.url);
+        const cacheKey = new Request(fileId ? `${request.url.split('?')[0]}?file_id=${fileId}` : request.url);
         let response = await cache.match(cacheKey);
 
         if (!response) {
-            // 如果缓存中没有，从 Telegram 获取
+            // 如果缓存中没有，从Telegram获取
             response = await fetch(telegramUrl);
             
             // 确定内容类型
             let contentType = response.headers.get('content-type');
-            // 根据文件扩展名设置正确的 MIME 类型
-            if (filePath.match(/\.(jpg|jpeg)$/i)) {
+            // 根据文件扩展名设置正确的MIME类型
+            if (telegramUrl.match(/\.(jpg|jpeg)$/i)) {
                 contentType = 'image/jpeg';
-            } else if (filePath.match(/\.png$/i)) {
+            } else if (telegramUrl.match(/\.png$/i)) {
                 contentType = 'image/png';
-            } else if (filePath.match(/\.gif$/i)) {
+            } else if (telegramUrl.match(/\.gif$/i)) {
                 contentType = 'image/gif';
-            } else if (filePath.match(/\.webp$/i)) {
+            } else if (telegramUrl.match(/\.webp$/i)) {
                 contentType = 'image/webp';
             }
 

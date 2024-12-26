@@ -112,22 +112,6 @@ export default class TelegramStorage {
     }
 
     async getFileUrl(fileId, requestUrl = '') {
-        // 获取文件信息
-        const response = await fetch(`${this.apiBase}/getFile`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                file_id: fileId
-            })
-        });
-
-        const result = await response.json();
-        if (!result.ok) {
-            throw new Error('Failed to get file info from Telegram: ' + result.description);
-        }
-
         // 从请求URL获取 origin
         let baseUrl;
         try {
@@ -136,10 +120,10 @@ export default class TelegramStorage {
             baseUrl = '';  // 如果无法解析，使用空字符串
         }
 
-        // 返回代理URL
+        // 返回基于file_id的URL
         return {
-            ...result.result,
-            url: `${baseUrl}/images/proxy?path=${result.result.file_path}`
+            file_id: fileId,
+            url: `${baseUrl}/images/proxy?file_id=${fileId}`
         };
     }
 } 
