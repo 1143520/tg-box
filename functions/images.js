@@ -47,27 +47,12 @@ export async function onRequestPost({ request, env }) {
                     throw new Error('未能获取到文件URL');
                 }
 
-                // 构造代理URL
-                const baseUrl = new URL(request.url).origin;
-                let proxyUrl;
-                
-                // 检查 file_url 的格式并相应地构造代理URL
-                if (result.file_url.includes('/file/bot')) {
-                    const filePath = result.file_url.split('/file/bot')[1].split('/').slice(1).join('/');
-                    proxyUrl = `${baseUrl}/images/proxy?path=${filePath}`;
-                } else {
-                    // 如果是其他格式的URL，直接使用
-                    proxyUrl = result.file_url;
-                }
-
-                console.log('Constructed proxy URL:', proxyUrl);
-
                 // 保存到数据库
                 try {
                     const stmt = await env.DB.prepare(
                         'INSERT INTO content_blocks (type, title, content, source) VALUES (?, ?, ?, ?)'
                     );
-                    const dbResult = await stmt.bind('image', file.name, proxyUrl, 'api').run();
+                    const dbResult = await stmt.bind('image', file.name, result.file_url, 'api').run();
                     console.log('Database insert result:', dbResult);
 
                     if (!dbResult.success) {
@@ -82,7 +67,7 @@ export async function onRequestPost({ request, env }) {
                 // 返回统一的响应格式
                 return new Response(
                     JSON.stringify({
-                        url: proxyUrl,
+                        url: result.file_url,
                         filename: file.name,
                         size: file.size,
                         type: file.type,
